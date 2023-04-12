@@ -123,6 +123,9 @@ class EightPuzzle(Problem):
         """ Define goal state and initialize a problem """
         super().__init__(initial, goal)
 
+        #Inicializamos la cantidad de nodos del problema.
+        self.total_nodes = 0
+
     def find_blank_square(self, state):
         """Return the index of the blank square in a given state"""
 
@@ -159,6 +162,8 @@ class EightPuzzle(Problem):
         neighbor = blank + delta[action]
         new_state[blank], new_state[neighbor] = new_state[neighbor], new_state[blank]
 
+        # Incrementamos la cantidad de nodos.
+        self.total_nodes += 1
         return tuple(new_state)
 
     def goal_test(self, state):
@@ -177,6 +182,37 @@ class EightPuzzle(Problem):
 
         return inversion % 2 == 0
 
+    def h(self, node):
+        """ Return the heuristic value for a given state. Default heuristic function used is 
+        h(n) = number of misplaced tiles """
+
+        return sum(s != g for (s, g) in zip(node.state, self.goal))
+
+    def h2(self,node):
+        return self.diferencias(node.state)
+
+    def diferencias(self,state):
+        filas_state = list()
+        filas_goal = list()
+        columnas_state = list()
+        columnas_goal = list()
+        for i in range(0,9):
+            filas_goal.append(int(self.goal.index(i)/3))
+            filas_state.append(int(state.index(i)/3))
+            columnas_goal.append(self.goal.index(i)%3)
+            columnas_state.append(state.index(i)%3)
+        dif = 0
+        for i in range(1,9):
+            dif += abs(filas_goal[i] - filas_state[i]) + abs(columnas_goal[i]-columnas_state[i])
+        return dif
+
+    # Crear un estado con "moves" movidas a partir del objetivo.
+    def shuffle(self,moves):
+        state = self.goal
+        for i in range(moves):
+            actions = self.actions(state)
+            state = self.result(state,random.choice(actions))
+        return state
 
 def breadth_first_graph_search(problem):
     """[Figure 3.11]
@@ -199,7 +235,70 @@ def breadth_first_graph_search(problem):
                 frontier.append(child)
     return None
 
+def best_first_graph_search(problem, f, display=False):
+    """Search the nodes with the lowest f scores first.
+    You specify the function f(node) that you want to minimize; for example,
+    if f is a heuristic estimate to the goal, then we have greedy best
+    first search; if f is node.depth then we have breadth-first search.
+    There is a subtlety: the line "f = memoize(f, 'f')" means that the f
+    values will be cached on the nodes as they are computed. So after doing
+    a best first search you can examine the f values of the path returned."""
+    f = memoize(f, 'f')
+    node = Node(problem.initial)
+    frontier = PriorityQueue('min', f)
+    frontier.append(node)
+    explored = set()
+    while frontier:
+        node = frontier.pop()
+        if problem.goal_test(node.state):
+            if display:
+                print(len(explored), "paths have been expanded and", len(frontier), "paths remain in the frontier")
+            return node
+        explored.add(node.state)
+        for child in node.expand(problem):
+            if child.state not in explored and child not in frontier:
+                frontier.append(child)
+            elif child in frontier:
+                if f(child) < frontier[child]:
+                    del frontier[child]
+                    frontier.append(child)
+    return None
+
+def uniform_cost_search(problem, display=False):
+    """[Figure 3.14]"""
+    return best_first_graph_search(problem, lambda node: node.path_cost, display)
+
+def astar_search(problem, h=None, display=False):
+    """A* search is best-first graph search with f(n) = g(n)+h(n).
+    You need to specify the h function when you call astar_search, or
+    else in your Problem subclass."""
+    h = memoize(h or problem.h, 'h')
+    return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
+
 if __name__ == '__main__':
-    puzzle = EightPuzzle(initial=(4,1,3,7,2,5,8,0,6))
-    exito = breadth_first_graph_search(puzzle)
-    print(f'La solución es {exito} Nivel: {exito.depth}\n{exito.solution()}\n Cantidad nodos: {Node.total_nodes}')
+    puzzle_aux = EightPuzzle(initial=(4,1,3,7,2,5,8,0,6))
+    initial = puzzle_aux.shuffle(80)
+    print(f'goal={puzzle_aux.goal} initial={initial}')
+
+
+    # BFS
+    #puzzle_bfs = EightPuzzle(initial=initial)
+    #exito = breadth_first_graph_search(puzzle_bfs)
+    #print(f'La solución utilizando {bcolors.OKGREEN}BFS{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{puzzle_bfs.total_nodes}{bcolors.ENDC}')
+
+    # UCS
+    #puzzle_ucs = EightPuzzle(initial=initial)
+    #exito = uniform_cost_search(puzzle_ucs)
+    #print(f'La solución utilizando {bcolors.OKGREEN}UCS{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{puzzle_ucs.total_nodes}{bcolors.ENDC}')
+
+
+    # ASTAR h1
+    puzzle_astar = EightPuzzle(initial=initial)
+    exito = astar_search(puzzle_astar)
+    print(f'La solución utilizando {bcolors.OKGREEN}ASTAR h1{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{puzzle_astar.total_nodes}{bcolors.ENDC}')
+
+
+    # ASTAR h2
+    puzzle_astar2 = EightPuzzle(initial=initial)
+    exito = astar_search(puzzle_astar2,h=puzzle_astar2.h2)
+    print(f'La solución utilizando {bcolors.OKGREEN}ASTAR h2{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{puzzle_astar2.total_nodes}{bcolors.ENDC}')
