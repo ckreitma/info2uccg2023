@@ -214,6 +214,127 @@ class EightPuzzle(Problem):
             state = self.result(state,random.choice(actions))
         return state
 
+
+
+
+class Hanoi(Problem):
+
+    def __init__(self, initial, goal):
+        """ Define goal state and initialize a problem """
+        super().__init__(initial, goal)
+
+        #Inicializamos la cantidad de nodos del problema.
+        self.total_nodes = 0
+
+
+    def actions(self, state):
+
+        possible_actions = []
+
+        p0 = state.index(0)
+        p1 = state.index(0,p0+1)
+
+        t0 = state[0]
+        t1 = state[p0+1]
+        if p1 == (len(state)-1):
+            t2 = 0
+        else:
+            t2 = state[p1+1]
+
+        if (t0<t1 or t1==0) and t0>0:
+            possible_actions.append([0,1])
+        if (t0<t2 or t2==0) and t0>0:
+            possible_actions.append([0,2])
+        if (t1<t0 or t0==0) and t1>0:
+            possible_actions.append([1,0])
+        if (t1<t2 or t2==0) and t1>0:
+            possible_actions.append([1,2])
+        if (t2<t0 or t0 == 0) and t2>0:
+            possible_actions.append([2,0])
+        if (t2<t1 or t1==0) and t2>0:
+            possible_actions.append([2,1])
+
+
+        print(f'state={state} topes={t0} {t1} {t2} possible_actions={possible_actions}')
+
+        return possible_actions
+
+    def result(self, state, action):
+        """ Given state and action, return a new state that is the result of the action.
+        Action is assumed to be a valid action in the state """
+        p0 = state.index(0)
+        p1 = state.index(0,p0+1)
+
+        print(f'Estado a procesar = {state} accion = {action}',end=' ')
+        nuevo_estado = list(state)
+        if action[0]==0:
+            elemento = nuevo_estado[0]
+            del nuevo_estado[0]
+        if action[0]==1:
+            elemento = nuevo_estado[p0+1]
+            del nuevo_estado[p0+1]
+        if action[0]==2:
+            elemento = nuevo_estado[p1+1]
+            del nuevo_estado[p1+1]
+
+        nuevo_estado = list(nuevo_estado)
+        print(f'elemento={elemento} nuevo_estado_intermedio={nuevo_estado}')
+        p0 = nuevo_estado.index(0)
+        p1 = nuevo_estado.index(0,p0+1)
+
+        if action[1] == 0:
+            nuevo_estado.insert(0, elemento)
+        if action[1] == 1:
+            nuevo_estado.insert(p0+1, elemento)
+        if action[1] == 2:
+            nuevo_estado.insert(p1+1, elemento)
+
+        # Incrementamos la cantidad de nodos.
+        self.total_nodes += 1
+        nuevo_estado = tuple(nuevo_estado)
+        print(f'Nuevo estado= {nuevo_estado} {p0} {p1} al aplicar a {state} {action}')
+        return nuevo_estado
+
+    def goal_test(self, state):
+        """ Given a state, return True if state is a goal state or False, otherwise """
+
+        return state == self.goal
+
+
+    def h(self, node):
+        """ Return the heuristic value for a given state. Default heuristic function used is 
+        h(n) = number of misplaced tiles """
+
+        return sum(s != g for (s, g) in zip(node.state, self.goal))
+
+    def h2(self,node):
+        return self.diferencias(node.state)
+
+    def diferencias(self,state):
+        filas_state = list()
+        filas_goal = list()
+        columnas_state = list()
+        columnas_goal = list()
+        for i in range(0,9):
+            filas_goal.append(int(self.goal.index(i)/3))
+            filas_state.append(int(state.index(i)/3))
+            columnas_goal.append(self.goal.index(i)%3)
+            columnas_state.append(state.index(i)%3)
+        dif = 0
+        for i in range(1,9):
+            dif += abs(filas_goal[i] - filas_state[i]) + abs(columnas_goal[i]-columnas_state[i])
+        return dif
+
+    # Crear un estado con "moves" movidas a partir del objetivo.
+    def shuffle(self,moves):
+        state = self.goal
+        for i in range(moves):
+            actions = self.actions(state)
+            state = self.result(state,random.choice(actions))
+        return state
+
+
+
 def breadth_first_graph_search(problem):
     """[Figure 3.11]
     Note that this function can be implemented in a
@@ -257,6 +378,8 @@ def best_first_graph_search(problem, f, display=False):
         explored.add(node.state)
         for child in node.expand(problem):
             if child.state not in explored and child not in frontier:
+                if display:
+                    print(f'Agregando {child}' )
                 frontier.append(child)
             elif child in frontier:
                 if f(child) < frontier[child]:
@@ -276,9 +399,9 @@ def astar_search(problem, h=None, display=False):
     return best_first_graph_search(problem, lambda n: n.path_cost + h(n), display)
 
 if __name__ == '__main__':
-    puzzle_aux = EightPuzzle(initial=(4,1,3,7,2,5,8,0,6))
-    initial = puzzle_aux.shuffle(80)
-    print(f'goal={puzzle_aux.goal} initial={initial}')
+    #puzzle_aux = EightPuzzle(initial=(4,1,3,7,2,5,8,0,6))
+    #initial = puzzle_aux.shuffle(6)
+    #print(f'goal={puzzle_aux.goal} initial={initial}')
 
 
     # BFS
@@ -293,12 +416,19 @@ if __name__ == '__main__':
 
 
     # ASTAR h1
-    puzzle_astar = EightPuzzle(initial=initial)
-    exito = astar_search(puzzle_astar)
-    print(f'La solución utilizando {bcolors.OKGREEN}ASTAR h1{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{puzzle_astar.total_nodes}{bcolors.ENDC}')
+    #puzzle_astar = EightPuzzle(initial=initial)
+    #exito = astar_search(puzzle_astar,display=True)
+    #print(f'La solución utilizando {bcolors.OKGREEN}ASTAR h1{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{puzzle_astar.total_nodes}{bcolors.ENDC}')
 
 
     # ASTAR h2
-    puzzle_astar2 = EightPuzzle(initial=initial)
-    exito = astar_search(puzzle_astar2,h=puzzle_astar2.h2)
-    print(f'La solución utilizando {bcolors.OKGREEN}ASTAR h2{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{puzzle_astar2.total_nodes}{bcolors.ENDC}')
+    #puzzle_astar2 = EightPuzzle(initial=initial)
+    #exito = astar_search(puzzle_astar2,h=puzzle_astar2.h2)
+    #print(f'La solución utilizando {bcolors.OKGREEN}ASTAR h2{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{puzzle_astar2.total_nodes}{bcolors.ENDC}')
+
+    # Hanoi
+    initial = (1,2,3,4,5,0,0)
+    goal = (0,0,1,2,3,4,5)
+    hanoi = Hanoi(initial=initial,goal=goal)
+    exito = astar_search(hanoi,display=False)
+    print(f'La solución utilizando {bcolors.OKGREEN}Hanoi{bcolors.ENDC} es {exito} Nivel: {exito.depth} {exito.solution()} Cantidad nodos: {bcolors.WARNING}{hanoi.total_nodes}{bcolors.ENDC}')
