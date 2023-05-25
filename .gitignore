@@ -51,6 +51,7 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+./machine_learning/lightning_logs/
 ./lightning_logs/
 
 # Translations
