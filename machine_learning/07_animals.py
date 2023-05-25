@@ -124,7 +124,7 @@ if __name__ == '__main__':
     datamodule = DataModule()
     datamodule.setup()
     model = ConvolutionalNetwork()
-    trainer = pl.Trainer(max_epochs=10)
+    trainer = pl.Trainer(max_epochs=50)
     trainer.fit(model, datamodule)
     datamodule.setup(stage='test')
     test_loader = datamodule.test_dataloader()
