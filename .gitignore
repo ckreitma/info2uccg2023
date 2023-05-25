@@ -26,6 +26,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+machine_learning/datasets/
 datasets/
 
 # PyInstaller
@@ -51,8 +52,8 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
-./machine_learning/lightning_logs/
-./lightning_logs/
+machine_learning/lightning_logs/
+lightning_logs/
 
 # Translations
 *.mo
