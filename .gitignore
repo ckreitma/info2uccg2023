@@ -35,6 +35,9 @@ datasets/
 *.manifest
 *.spec
 
+#Config.
+config.ini
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -131,3 +134,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+openai.key

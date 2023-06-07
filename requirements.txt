@@ -89,3 +89,5 @@ sklearn
 scikit-learn
 scipy
 matplotlib
+openai
+sentiment-analysis-spanish
