@@ -91,3 +91,4 @@ scipy
 matplotlib
 openai
 sentiment-analysis-spanish
+nltk

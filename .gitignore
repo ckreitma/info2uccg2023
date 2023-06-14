@@ -57,6 +57,7 @@ coverage.xml
 .pytest_cache/
 machine_learning/lightning_logs/
 lightning_logs/
+aclImdb/
 
 # Translations
 *.mo
@@ -113,6 +114,7 @@ celerybeat.pid
 .venv
 env/
 venv/
+.venv/
 ENV/
 env.bak/
 venv.bak/
